@@ -15,7 +15,7 @@
     // var pumpCount = 1000;
 
     // var bailout = 200;
-    var bailout = 20000;
+    var bailout = 200;
 
     // how many millions of plots to do
     // var maxItr = 1000;
@@ -133,7 +133,7 @@
 
                 var tempi = j * 4;
 
-                var rgba = mapColor0(ramp);
+                var rgba = mapColor(ramp);
                 canvasData[tempi] = rgba[0];     // r
                 canvasData[tempi + 1] = rgba[1]; // g
                 canvasData[tempi + 2] = rgba[2]; // b
