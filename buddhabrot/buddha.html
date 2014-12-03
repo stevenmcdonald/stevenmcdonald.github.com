@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Buddhabrot</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+    <style type="text/css">
+        #can {
+            background: black;
+        }
+        #frame {
+            border: 1px solid orange;
+            background: black;
+        }
+
+        .prog-container > svg {
+            display: block;
+            width: 100%;
+            height: 1px;
+        }
+
+        #progress-container {
+            /*width: 1000px;*/
+            height: 1px;
+        }
+        #progress-container-container {
+            border: 1px solid #aaa;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+    <script src="bower_components/progressbar.js/dist/progressbar.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div id="progress-container-container">
+                <div id="progress-container" class="prog-container"></div>
+            </div>
+            <div id="frame" class="row">
+                <canvas id="cancan" width="1000" height="1000"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="buddha.js"></script>
+</body>
+</html>
