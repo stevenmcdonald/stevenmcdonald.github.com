@@ -195,44 +195,42 @@
 
     }
 
+    for(var b=0; b<numBuddhas; b++) {
+        buddhas[b] = new Worker('buddhaWorker.js');
+        buddhas[b].addEventListener('message', buddhaListener);
+        buddhas[b].postMessage({
+            cmd: 'start',
+            x: calcX,
+            y: calcY,
+            bailout: bailout,
+            maxItr: maxItr/numBuddhas,
+            i: b
+        });
+        console.log('buddha ' + b);
+    }
 
+    // var buddha = new Worker('buddhaWorker.js');
+    // buddha.addEventListener('message', function(e) {
+    //     var data = e.data;
+    //     switch(data.cmd) {
+    //         case 'progress':
+    //             progress.animate(data.progress);
+    //             break;
+    //         case 'done':
+    //             console.log('done');
+    //             draw(data.imageData);
+    //             console.log('drawn');
+    //             break;
+    //         case 'progressDraw':
+    //             draw(data.imageData);
+    //             break;
+    //         default:
+    //             console.log('unknown message ', data);
+    //     }
 
-    // for(var b=0; b<numBuddhas; b++) {
-    //     buddhas[b] = new Worker('buddhaWorker.js');
-    //     buddhas[b].addEventListener('message', buddhaListener);
-    //     buddhas[b].postMessage({
-    //         cmd: 'start',
-    //         x: calcX,
-    //         y: calcY,
-    //         bailout: bailout,
-    //         maxItr: maxItr/numBuddhas,
-    //         i: b
-    //     });
-    //     console.log('buddha ' + b);
-    // }
+    // });
 
-    var buddha = new Worker('buddhaWorker.js');
-    buddha.addEventListener('message', function(e) {
-        var data = e.data;
-        switch(data.cmd) {
-            case 'progress':
-                progress.animate(data.progress);
-                break;
-            case 'done':
-                console.log('done');
-                draw(data.imageData);
-                console.log('drawn');
-                break;
-            case 'progressDraw':
-                draw(data.imageData);
-                break;
-            default:
-                console.log('unknown message ', data);
-        }
-
-    });
-
-    buddha.postMessage({cmd: 'start', x: calcX, y: calcY, bailout: bailout, maxItr: maxItr});
+    // buddha.postMessage({cmd: 'start', x: calcX, y: calcY, bailout: bailout, maxItr: maxItr});
 
     // function iterate(x0, y0) {
 
