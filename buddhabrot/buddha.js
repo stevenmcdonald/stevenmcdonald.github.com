@@ -15,11 +15,11 @@
     // var pumpCount = 1000;
 
     // var bailout = 200;
-    var bailout = 200;
+    var bailout = 2000;
 
     // how many millions of plots to do
     // var maxItr = 1000;
-    var maxItr = 100;
+    var maxItr = 1000;
 
     var image = ctx.createImageData(calcX, calcY);
     var canvasData = image.data;
