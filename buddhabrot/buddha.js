@@ -245,7 +245,7 @@
         dimY    = options.dimY || 1000;
         min_itr = options.min_itr || 0;
         max_itr = options.max_itr || 200;
-        plots   = options.pliots || 1000;
+        plots   = options.plots || 1000;
 
         colormapper = options.colormap || 'monochrome';
 
