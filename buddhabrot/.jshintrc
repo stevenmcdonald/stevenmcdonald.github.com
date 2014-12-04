@@ -1,0 +1,15 @@
+{
+	"undef": true,
+	"unused": true,
+	"predef": [
+		"ProgressBar",
+		"document",
+		"console",
+		"Uint32Array",
+		"Float32Array",
+		"Worker",
+		"self",
+		"window",
+		"angular"
+	]
+}

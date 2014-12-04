@@ -7,19 +7,29 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
     <style type="text/css">
-        #can {
-            background: black;
-        }
-        #frame {
-            border: 1px solid orange;
-            background: black;
-        }
 
+        /* progress bar */
         .prog-container > svg {
             display: block;
             width: 100%;
-            height: 1px;
+            /*width: 1000px;*/
+            height: 2px;
         }
+
+        #cancan {
+            /*margin: 0 auto;*/
+        }
+        #frame {
+            /*border: 1px solid orange;*/
+            background: black;
+            /*margin: 0;*/
+            /*padding: 0;*/
+            width: 1000px;
+        }
+
+        /*.col-lg-1 {
+            border: 1px solid red;
+        }*/
 
         #progress-container {
             /*width: 1000px;*/
@@ -28,23 +38,82 @@
         #progress-container-container {
             border: 1px solid #aaa;
         }
+
+        .canvas-container {
+            margin: 0;
+        }
+
+
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
     <script src="bower_components/progressbar.js/dist/progressbar.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.3/angular.min.js"></script>
+    <script src="buddha.js"></script>
+    <script src="buddhaApp.js"></script>
 </head>
-<body>
-    <div class="container">
+<body ng-app="BuddhaApp">
+    <div class="container" ng-controller="BuddhaController">
+
         <div class="row">
-            <div id="progress-container-container">
-                <div id="progress-container" class="prog-container"></div>
-            </div>
-            <div id="frame" class="row">
-                <canvas id="cancan" width="1000" height="1000"></canvas>
+            <div id="canvas-container">
+                <div id="frame">
+                    <canvas id="cancan" width="1000" height="1000"></canvas>
+                </div>
             </div>
         </div>
+        <div class="row">
+             <div id="progress-container-container">
+                <div id="progress-container" class="prog-container"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div id="controls" class="well">
+                <form role="form" class="form-horizontal">
+                    <div class="form-group">
+                        <label for="plots" class="col-lg-3">Number of plots (in millions)</label>
+                        <div class="col-lg-4">
+                            <input class="form-control" ng-model="plots" type="range" min="1" max="10000" step="1">
+                        </div>
+                        <div class="col-lg-1">
+                            <input id="plots-display" ng-model="plots" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="min-itr" class="col-lg-3">Minumum Iterations</label>
+                        <div class="col-lg-4">
+                            <input class="form-control" ng-model="min_itr" type="range" min="0" max="20000" step="1">
+                        </div>
+                        <div class="col-lg-1">
+                            <input id="min-itr-display" ng-model="min_itr" class="form-control" type="text">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="max-itr" class="col-lg-3">Maximum Iterations</label>
+                        <div class="col-lg-4">
+                            <input class="form-control" ng-model="max_itr" type="range" min="0" max="20000" step="1">
+                        </div>
+                        <div class="col-lg-1">
+                            <input id="max-itr-display" ng-model="max_itr" class="form-control" type="text">
+                        </div>
+                    </div>
+                    <div>
+                    <div class="form-group">
+                        <label for="color-map">Color Map</label>
+                        <select name="color-map" id="color-map" class="form-control" ng-model="colormap">
+                            <option value="monochrome">Greyscale</option>
+                            <option value="experiment">Experiment</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" id="start-button" ng-click="start()" class="btn btn-primary">Start</button>
+                        <button type="button" id="stop-button" ng-click="stop()" class="btn btn-danger">Stop</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 
-    <script src="buddha.js"></script>
 </body>
 </html>
