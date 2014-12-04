@@ -66,7 +66,31 @@
             scaled = (point - 127) * 2; // scale 127-255 -> 0-255 (254)
             return([scaled, scaled, scaled, 255]);
         },
-        'experiment': function(point, weight) {
+        'flame': function(point) {
+            var scaled;
+
+            if(point <= 95) {
+                return([0, 0, 0, 0]);
+            }
+            if(point <= 127) {
+                scaled = 128 + point; // 224 - 255
+                return([scaled, 0, 0, 32]);
+            }
+            if(point <= 159) {
+                scaled = 96 + point;
+                return([scaled, 0, 0, 255]);
+            }
+            if(point <= 191) {
+                scaled = 64 + point;
+                return([scaled, scaled, 0, 255]);
+            }
+            if(point <= 223) {
+                return([223, 223, point, 255]);
+            }
+
+            return([point, point, point, 255]);
+        },
+        'experiment': function(point) {
             var scaled;
 
             // plots 100
@@ -199,6 +223,8 @@
                 // console.log("progress: ", data.progress);
                 break;
             case 'done':
+                if(window.scmBuddha.doneCallback) { window.scmBuddha.doneCallback(); }
+                // fall through and draw
             case 'progressDraw':
                 addBuddhaData(data.imageData, data.i);
                 if(data.weights) {
@@ -239,7 +265,7 @@
 
         console.log("buddha.js start: ", options);
 
-        var threads = options.threads || 1;
+        var threads = options.threads || 2;
 
         dimX    = options.dimX || 1000;
         dimY    = options.dimY || 1000;
@@ -259,9 +285,12 @@
         image = ctx.createImageData(dimX, dimY);
         canvasData = image.data;
 
-        progress = new ProgressBar.Line('#progress-container', {
-            color: '#FCB03C'
-        });
+        if(!progress) {
+            progress = new ProgressBar.Line('#progress-container', {
+                color: '#FCB03C'
+            });
+        }
+        progress.animate(0);
 
         startMultiThreaded(threads);
     }
@@ -270,6 +299,11 @@
         for(var i=0; i<numBuddhas; i++) {
             buddhas[i].terminate();
         }
+
+        // let these get gc'd while we're idle
+        buddhaBrot = null;
+        weights = null;
+
         console.log("stopped");
     }
 

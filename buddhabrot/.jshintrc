@@ -10,6 +10,7 @@
 		"Worker",
 		"self",
 		"window",
-		"angular"
+		"angular",
+		"$"
 	]
 }
