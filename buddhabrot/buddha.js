@@ -140,13 +140,51 @@
             // return([scaled, scaled, scaled, 255]);
             // return([point, point, point, 255]);
             return([255, 255, 255, point]);
+        },
+        'cymrgb': function(point) {
+            var scaled;
+
+            if(point <= 31) {
+                // 127 - 255
+                scaled = (point + 33) * 4 - 1;
+                return([scaled, scaled, scaled, 255]);
+            }
+            if(point <= 63) {
+                scaled = (point + 1) * 4 - 1;
+                return([0, scaled, scaled, 255]);
+            }
+            if(point <= 95) {
+                scaled = (point - 31) * 4 - 1;
+                return([scaled, scaled, 0, 255]);
+            }
+            if(point <= 127) {
+                scaled = (point - 63) * 4 - 1;
+                return([scaled, 0, scaled, 255]);
+            }
+            if(point <= 159) {
+                scaled = (point - 95) * 4 - 1;
+                return([scaled, 0, 0, 255]);
+            }
+            if(point <= 191) {
+                scaled = (point - 127) * 4 - 1;
+                return([0, scaled, 0, 255]);
+            }
+            if(point <= 223) {
+                scaled = (point - 159) * 4 - 1;
+                return([0, scaled, 0, 255]);
+            }
+
+            scaled = (point - 191) * 4 - 1;
+            return([scaled, scaled, scaled, 255]);
         }
     };
     // var colormapper = 'monochrome';
     // var colormapper = 'experiment';
 
     function mapColor(point, weight) {
-        return colormapers[colormapper](point, weight);
+        var color = colormapers[colormapper](point, weight);
+        // console.log("color: ", color);
+        return color;
     }
 
     function draw(imageData) {
