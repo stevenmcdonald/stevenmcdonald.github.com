@@ -80,8 +80,8 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="preset-select2" class="col-lg-3">Presets:</label>
-                        <div class="col-lg-3">
+                        <label for="preset-select2" class="col-sm-2">Presets:</label>
+                        <div class="col-xs-3">
                             <select id="preset-select2" class="form-control">
                                 <option></option>
                                 <option value="quick">Quick</option>
@@ -92,8 +92,8 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="plots" class="col-lg-3">Number of plots (in millions):</label>
-                        <div class="col-lg-2">
+                        <label for="plots" class="col-sm-2">Number of plots (in millions):</label>
+                        <div class="col-xs-2">
                             <input id="plots" type="number" class="form-control" ng-model="plots">
                         </div>
                         <!-- <div class="col-lg-4">
@@ -104,8 +104,8 @@
                         </div> -->
                     </div>
                     <div class="form-group">
-                        <label for="min-itr" class="col-lg-3">Minumum Iterations:</label>
-                        <div class="col-lg-2">
+                        <label for="min-itr" class="col-sm-2">Minumum Iterations:</label>
+                        <div class="col-xs-2">
                             <input id="min-itr" type="number" class="form-control" ng-model="min_itr">
                         </div>
                         <!-- <div class="col-lg-4">
@@ -116,8 +116,8 @@
                         </div> -->
                     </div>
                     <div class="form-group">
-                        <label for="max-itr" class="col-lg-3">Maximum Iterations:</label>
-                        <div class="col-lg-2">
+                        <label for="max-itr" class="col-lg-2 col-sm-2">Maximum Iterations:</label>
+                        <div class="col-xs-2">
                             <input id="max-itr" type="number" class="form-control" ng-model="max_itr">
                         </div>
                         <!-- <div class="col-lg-4">
@@ -128,9 +128,13 @@
                         </div> -->
                     </div>
                     <div class="form-group">
-                        <label for="color-map" class="col-lg-3">Color Map:</label>
-                        <div class="col-lg-3">
-                            <select name="color-map" id="color-map" class="form-control" ng-model="colormap" ng-disabled="running">
+                        <label for="color-map" class="col-sm-2">Color Map:</label>
+                        <div class="col-xs-2">
+                            <select name="color-map"
+                                    id="color-map"
+                                    class="form-control"
+                                    ng-model="colormap"
+                                    ng-disabled="running">
                                 <option value="monochrome">Greyscale</option>
                                 <option value="flame">Flame</option>
                                 <option value="experiment">Experiment</option>
@@ -142,7 +146,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <div class="col-lg-8 col-md-12">
+                        <div class="col-xs-4">
                             <button type="submit" id="start-button" ng-click="start()" class="btn btn-primary" ng-disabled="running">Start</button>
                             <button type="button" id="stop-button" ng-click="stop()" class="btn btn-default" ng-disabled="!running">Stop</button>
                         </div>

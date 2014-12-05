@@ -38,7 +38,7 @@
             return([point, point, point, 255]);
         },
         'snow': function(point) {
-            var scale = Math.pow(point, Math.E);
+            var scale = point * point;
             scale = Math.min(scale, 255);
             return([point, point, point, 255]);
         },
@@ -49,11 +49,11 @@
                 Math.round(Math.random() * 255),
                 Math.round(Math.random() * 255),
                 point
-                ])
+                ]);
         },
         'bichrome': function(point) {
             if(point > 223) {
-                var scale = point - 223
+                var scale = point - 223;
                 return([scale, scale, scale, point]);
             }
             return([point, point, point, 255]);
@@ -326,7 +326,7 @@
 
     function redraw(colormap) {
         if(buddhaBrot && buddhaBrot.length) {
-            colormapper = colormap;
+            if(colormap) { colormapper = colormap; }
             draw(buddhaBrot);
         }
     }

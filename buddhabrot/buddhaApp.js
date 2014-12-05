@@ -42,7 +42,7 @@
         $scope.max_itr = 200;
 
         $scope.plots = 100;
-        $scope.colormap = 'monochrome';
+        // $scope.colormap = 'monochrome';
 
         var cm = $('#color-map');
         var presets = $('#preset-select2');
@@ -82,12 +82,10 @@
         }
 
         cm.select2().on('change', function(e) {
-            if(!$scope.running) {
-                $scope.colormap = e.val;
-                console.log("colormap change: ", $scope.colormap);
-                window.scmBuddha.redraw($scope.colormap);
-                $scope.$apply();
-            }
+            $scope.colormap = e.val;
+            console.log("colormap change: ", $scope.colormap);
+            window.scmBuddha.redraw($scope.colormap);
+            $scope.$apply();
         });
 
 
