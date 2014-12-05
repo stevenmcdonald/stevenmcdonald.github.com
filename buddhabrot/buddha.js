@@ -37,6 +37,27 @@
         'monochrome': function(point) {
             return([point, point, point, 255]);
         },
+        'snow': function(point) {
+            var scale = Math.pow(point, Math.E);
+            scale = Math.min(scale, 255);
+            return([point, point, point, 255]);
+        },
+        'crazy': function(point) {
+
+            return([
+                Math.round(Math.random() * 255),
+                Math.round(Math.random() * 255),
+                Math.round(Math.random() * 255),
+                point
+                ])
+        },
+        'bichrome': function(point) {
+            if(point > 223) {
+                var scale = point - 223
+                return([scale, scale, scale, point]);
+            }
+            return([point, point, point, 255]);
+        },
         'rainbowish':function(point){
             if(point <= 31)
                 return([point, point, point, 255]);
@@ -224,6 +245,7 @@
                 break;
             case 'done':
                 if(window.scmBuddha.doneCallback) { window.scmBuddha.doneCallback(); }
+                progress.set(0);
                 // fall through and draw
             case 'progressDraw':
                 addBuddhaData(data.imageData, data.i);
@@ -290,7 +312,7 @@
                 color: '#FCB03C'
             });
         }
-        progress.animate(0);
+        progress.set(0);
 
         startMultiThreaded(threads);
     }
@@ -299,149 +321,20 @@
         for(var i=0; i<numBuddhas; i++) {
             buddhas[i].terminate();
         }
-
-        // let these get gc'd while we're idle
-        buddhaBrot = null;
-        weights = null;
-
         console.log("stopped");
+    }
+
+    function redraw(colormap) {
+        if(buddhaBrot && buddhaBrot.length) {
+            colormapper = colormap;
+            draw(buddhaBrot);
+        }
     }
 
     window.scmBuddha = {
         startBuddha: startBuddha,
-        stopBuddha: stopBuddha
+        stopBuddha: stopBuddha,
+        redraw: redraw
     };
-
-    // startMultiThreaded(2);
-
-    // var buddha = new Worker('buddhaWorker.js');
-    // buddha.addEventListener('message', function(e) {
-    //     var data = e.data;
-    //     switch(data.cmd) {
-    //         case 'progress':
-    //             progress.animate(data.progress);
-    //             break;
-    //         case 'done':
-    //             console.log('done');
-    //             draw(data.imageData);
-    //             console.log('drawn');
-    //             break;
-    //         case 'progressDraw':
-    //             draw(data.imageData);
-    //             break;
-    //         default:
-    //             console.log('unknown message ', data);
-    //     }
-
-    // });
-
-    // buddha.postMessage({cmd: 'start', x: dimX, y: dimY, max_itr: max_itr, plots: plots});
-
-    // function iterate(x0, y0) {
-
-    //     var xnew, ynew,
-    //         x = 0,
-    //         y = 0;
-
-    //     var XY = new Array(max_itr);
-
-    //     for(var i = 0; i<max_itr; i++) {
-    //         xnew = x * x - y * y + x0;
-    //         ynew = 2 * x * y + y0;
-    //         XY[i] = [xnew, ynew];
-    //         if(xnew*xnew + ynew+ynew > 10) {
-    //             // console.log('iterate done: ', XY);
-    //             return([i, XY]);
-    //         }
-    //         x = xnew;
-    //         y = ynew;
-    //     }
-
-    //     return(false);
-    // }
-
-    // var tt = 0;
-    // function pump() {
-
-    //     // console.log("itr: " + tt);
-
-
-    //     if(tt >= dimX*dimY) {
-    //         progress.animate(1);
-    //         done();
-    //         return;
-    //     }
-
-    //     var prog = (tt)/(dimX*dimY);
-    //     // console.log({prog: prog, tt: tt});
-    //     progress.animate(prog);
-
-    //     for(var temp = 0; temp < pumpCount; temp++) {
-
-
-    //         for(var t=0; t<plots; t++) {
-
-    //             // why -3 - +3?
-    //             var x = 6 * Math.random() - 3;
-    //             var y = 6 * Math.random() - 3;
-    //             var result = iterate(x,y);
-
-    //             if(result) {
-    //                 var n = result[0];
-    //                 var XY = result[1];
-
-    //                 // console.log("XY ", XY);
-    //                 for(var i=0; i<n; i++) {
-    //                     var seqx = XY[i][0];
-    //                     var seqy = XY[i][1];
-
-    //                     // console.log({x: x, y: y});
-
-    //                     var ix = 0.3 * dimX * (seqx + 0.5) + dimX/2;
-    //                     var iy = 0.3 * dimY * seqy + dimY/2;
-    //                     if (ix >= 0 && iy >= 0 && ix < dimX && iy < dimY) {
-    //                         var index = Math.round(iy*dimX+ix);
-    //                         // console.log("index: ", index);
-    //                         imageData[index]++;
-    //                     }
-    //                 }
-    //             }
-
-    //         }
-    //     }
-
-    //     tt += pumpCount;
-    //     setTimeout(pump, 0);
-    // }
-
-    // pump();
-
-    // // dimX * dimY?
-    // for(var tt=0; tt<dimX*dimY;tt++) {
-    //  for(var t=0; t<plots; t++) {
-
-    //      // why -3 - +3?
-    //      var x = 6 * Math.random() - 3;
-    //      var y = 6 * Math.random() - 3;
-    //      var result = iterate(x,y);
-
-    //      if(result) {
-    //          var n = result[0];
-    //          var XY = result[1];
-    //          for(var i=0; i<n; i++) {
-    //              var seqx = XY[i][0];
-    //              var seqy = XY[i][1];
-
-    //              var ix = 0.3 * dimX * (seqx + 0.5) + dimX/2;
-    //              var iy = 0.3 * dimY * seqy + dimY/2;
-    //              if (ix >= 0 && iy >= 0 && ix < dimX && iy < dimY)
-    //                  imageData[iy*dimX+ix]++;
-    //          }
-    //      }
-
-    //  }
-    // }
-
-
 
 })();

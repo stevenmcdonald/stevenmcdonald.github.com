@@ -42,7 +42,7 @@
         $scope.max_itr = 200;
 
         $scope.plots = 100;
-        // $scope.colormap = 'monochrome';
+        $scope.colormap = 'monochrome';
 
         var cm = $('#color-map');
         var presets = $('#preset-select2');
@@ -73,17 +73,30 @@
             $scope.$apply();
         };
 
-        cm.select2();
-        presets.select2({
-            placeholder: "presets"
-        }).on('change', function(e) {
-            console.log(e.val);
-            var p = $scope.presets[e.val];
+        function applyPreset(p) {
             console.log({p: p});
             $scope.plots = p.plots;
             $scope.min_itr = p.min_itr;
             $scope.max_itr = p.max_itr;
             $scope.colormap = p.colormap;
+        }
+
+        cm.select2().on('change', function(e) {
+            if(!$scope.running) {
+                $scope.colormap = e.val;
+                console.log("colormap change: ", $scope.colormap);
+                window.scmBuddha.redraw($scope.colormap);
+                $scope.$apply();
+            }
+        });
+
+
+        presets.select2({
+            placeholder: "presets"
+        }).on('change', function(e) {
+            console.log(e.val);
+            var p = $scope.presets[e.val];
+            applyPreset(p);
             $scope.$apply();
         });
 

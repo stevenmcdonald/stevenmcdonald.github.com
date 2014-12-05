@@ -1,48 +1,49 @@
-//  "use strict";
+(function() {
+  "use strict";
 
-// function iterate(x0, y0, max_itr) {
+function Buddha(options) {
 
-//     var xnew, ynew,
-//         x = 0,
-//         y = 0;
+    // references to 'this' are *way* faster than references to 'self' in Chrome's profiler.
+    // in the latter case, 40% of the time is spent in "get self".
 
-//     var XY = new Float32Array(max_itr * 2);
+    this.dimX = options.x;
+    this.dimY = options.y;
 
-//     for(var i = 0; i<max_itr; i++) {
-//         xnew = (x * x) - (y * y) + x0;
-//         ynew = 2 * x * y + y0;
-//         // XY[i] = [xnew, ynew];
-//         var tempi = 2 * i;
-//         XY[tempi] = xnew;
-//         XY[tempi+1] = ynew;
-//         if(xnew*xnew + ynew*ynew > 10) {
-//         // if(xnew*xnew + ynew*ynew > 4) {
-//             // console.log('iterate done: ', XY);
-//             return([i, XY]);
-//         }
-//         x = xnew;
-//         y = ynew;
-//     }
+    this.halfX = this.dimX / 2;
+    this.halfY = this.dimY / 2;
+    this.thirdX = this.dimX / 3;
+    this.thirdY = this.dimY /  3;
 
-//     return(false);
-// }
+    this.imageData = new Uint32Array(this.dimX*this.dimY);
+    this.weights = new Uint32Array(this.dimX*this.dimY);
 
-function iterate2(x0, y0, draw) {
+    this.min_itr = options.min_itr || 0;
+    this.max_itr = options.max_itr || 200;
+
+    this.plots = options.plots || 1000;
+
+    this.workerNumber = options.i || 0;
+
+    // iterate() uses this for scratch space. We want to avoid reallocating it
+    // so we don't spend all our time in the garbage collector. Fomat is [x1,y1,x2,y2...xn,yn]
+    this.XY = new Float64Array(this.max_itr * 2);
+}
+
+Buddha.prototype.iterate = function(x0, y0) {
 
     var xnew, ynew,
         x = 0,
         y = 0;
 
-    for(var i = 0; i<self.max_itr; i++) {
+    for(var i = 0; i<this.max_itr; i++) {
         xnew = (x * x) - (y * y) + x0;
         ynew = 2 * x * y + y0;
-        if(draw) {
-            pushPixel(xnew, ynew, i);
-        }
+        this.XY[i*2] = xnew;
+        this.XY[i*2+1] = ynew;
+
         if(xnew*xnew + ynew*ynew > 10) {
         // if(xnew*xnew + ynew*ynew > 4) {
-            // return(true);
-            if(i>=self.min_itr) { return(true); }
+            if(i>=this.min_itr) { return(i); }
             return(false);
         }
         x = xnew;
@@ -50,19 +51,19 @@ function iterate2(x0, y0, draw) {
     }
 
     return(false);
-}
+};
 
-function pushPixel(x, y, weight) {
+Buddha.prototype.pushPixel = function(x, y, weight) {
     // I think we're scalaing and centering the image here
 
-    var dimX = self.dimX,
-        dimY = self.dimY;
+    var dimX = this.dimX,
+        dimY = this.dimY;
 
    // Paul Bourke's version
    // var ix = 0.3 * dimX * (seqx + 0.5) + dimX/2;
    // var iy = 0.3 * dimY * seqy + dimY/2;
-   var ix = Math.round(self.thirdX * (x + 0.5) + self.halfX);
-   var iy = Math.round(self.thirdY * y + self.halfY);
+   var ix = Math.round(this.thirdX * (x + 0.5) + this.halfX);
+   var iy = Math.round(this.thirdY * y + this.halfY);
 
    // sort of more like j.tarbell's code
    // var ix = (dimX * (seqx + 0) / 3) + dimX/2;
@@ -73,43 +74,38 @@ function pushPixel(x, y, weight) {
        // rotate the image
        var temp = ix*dimY+iy;
 
-        // imageData[iy*dimX+ix]++;
-
-        self.imageData[temp]++;
+        this.imageData[temp]++;
         if(weight !== undefined) {
-            self.weights[temp] += weight;
+            this.weights[temp] += weight;
         }
     }
-}
+};
 
-function calculate() {
+Buddha.prototype.calculate = function() {
 
-    if(!(self.dimX && self.dimY && self.max_itr && self.plots)) {
-        console.log({dimX: self.dimX, dimY: self.dimY, max_itr: self.max_itr, plots: self.plots});
-        // throw new Error("Missing Parameter");
-        return;
-    }
+    var lastTime = new Date().getTime();
 
-    console.log("worker starting: " + self.workerNumber);
+    console.log("worker starting: " + this.workerNumber + " time: " + lastTime);
 
     var tts = 1000000;
 
-    for(var tt=0; tt<tts;tt++) {
-        if(tt % (tts/1000) === 0) {
-            self.postMessage({cmd: 'progress', progress: tt/tts, i: self.workerNumber});
-            // console.log("progress: " + tt/tts);
-        }
-        if(tt % (tts/100) === 0) {
+    for(var t=0; t<this.plots; t++) {
+
+        var currTime = new Date().getTime();
+
+        if((currTime - lastTime) > 5000) {
+            lastTime = currTime;
             self.postMessage({cmd:       'progressDraw',
-                              imageData: self.imageData,
-                              weights:   self.weights,
-                              i:         self.workerNumber});
-            if(self.workerNumber) {
-                self.imageData = new Uint32Array(self.dimX*self.dimY);
-            }
+                              imageData: this.imageData,
+                              weights:   this.weights,
+                              i:         this.workerNumber});
+            // we've sent our data to our caller, so start fresh
+            this.imageData = new Uint32Array(this.dimX*this.dimY);
         }
 
-        for(var t=0; t<self.plots; t++) {
+        self.postMessage({cmd: 'progress', progress: (t+1)/this.plots, i: this.workerNumber});
+
+        for(var tt=0; tt<tts;tt++) {
 
             // why -3 - +3?
             var x = 6 * Math.random() - 3;
@@ -133,63 +129,50 @@ function calculate() {
             var ysquared = y * y;
             var q = xminusq*xminusq + y*y;
             if(q*(q + xminusq) < ysquared/4) {
-                // console.log('cardoid');
                 continue;
             }
             // or the period-2 bulb
             if((x+1)*(x+1) + ysquared < ysquared/4) {
-                // console.log("your mom's a period-2 bulb")
                 continue;
             }
 
-            var result = iterate2(x,y, false);
+            var result = this.iterate(x,y);
 
             // Calling iterate again seems to be way faster than returning an array.
             // in the latter case, the code spends 50% of its time garbage collecting
             // those arrays.
 
-            // it may be worth trying using one array in self as scratch space
-            if(result === true) {
-                iterate2(x, y, true);
+            // it may be worth trying using one array in this as scratch space
+
+            if(result) {
+                for(var i = 0; i<result; i++) {
+                    this.pushPixel(this.XY[i*2], this.XY[i*2+1], result);
+                }
             }
         }
     }
-    // console.log("max: ", Math.max.apply(imageData));
-    self.postMessage({cmd: 'progress', progress: 1, i: self.workerNumber});
-    self.postMessage({cmd: 'done', imageData: self.imageData, weights: self.weights, i: self.workerNumber});
-    console.log("worker done: " + self.workerNumber);
-}
+    self.postMessage({cmd: 'progress', progress: 1, i: this.workerNumber});
+    self.postMessage({cmd: 'done', imageData: this.imageData, weights: this.weights, i: this.workerNumber});
+    console.log("worker done: " + this.workerNumber);
+};
 
 function eventListener(e) {
     var data = e.data;
 
     switch(data.cmd) {
         case 'start':
+
             console.log("worker start: ", data);
 
-            self.dimX = data.x;
-            self.dimY = data.y;
-
-            self.halfX = self.dimX / 2;
-            self.halfY = self.dimY / 2;
-            self.thirdX = self.dimX / 3;
-            self.thirdY = self.dimY /  3;
-
-            self.imageData = new Uint32Array(self.dimX*self.dimY);
-            self.weights = new Uint32Array(self.dimX*self.dimY);
-
-            self.min_itr = data.min_itr || 0;
-            self.max_itr = data.max_itr || 200;
-
-            self.plots = data.plots || 1000;
-
-            self.workerNumber = data.i || 0;
-
-            calculate();
+            var b = new Buddha(data, self);
+            b.calculate();
             break;
+
         default:
             console.log("unknown message: ", data);
     }
 }
 
 self.addEventListener('message', eventListener);
+
+})();
