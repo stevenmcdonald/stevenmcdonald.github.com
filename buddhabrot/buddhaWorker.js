@@ -15,7 +15,7 @@ function Buddha(options) {
     this.thirdY = this.dimY /  3;
 
     this.imageData = new Uint32Array(this.dimX*this.dimY);
-    this.weights = new Uint32Array(this.dimX*this.dimY);
+    // this.weights = new Uint32Array(this.dimX*this.dimY);
 
     this.min_itr = options.min_itr || 0;
     this.max_itr = options.max_itr || 200;
@@ -40,6 +40,16 @@ Buddha.prototype.iterate = function(x0, y0) {
         ynew = 2 * x * y + y0;
         this.XY[i*2] = xnew;
         this.XY[i*2+1] = ynew;
+
+        if(i>=3) {
+            // check the last 2 points for obvious cycles
+            var lasti = (i-1) * 2,
+                slasti = (i-2) * 2;
+            if((xnew === this.XY[lasti] && ynew === this.XY[lasti+1]) ||
+                (xnew === this.XY[slasti] && ynew === this.XY[lasti+1])) {
+                return(false);
+            }
+        }
 
         if(xnew*xnew + ynew*ynew > 10) {
         // if(xnew*xnew + ynew*ynew > 4) {
@@ -75,11 +85,39 @@ Buddha.prototype.pushPixel = function(x, y, weight) {
        var temp = ix*dimY+iy;
 
         this.imageData[temp]++;
-        if(weight !== undefined) {
-            this.weights[temp] += weight;
-        }
+        // if(weight !== undefined) {
+        //     this.weights[temp] += weight;
+        // }
     }
 };
+
+Buddha.prototype.isPointInSet = function(x, y) {
+
+    // points within the Mandelbrot set will iterate until max_itr.
+    // check if our point is within the cardoid or period-2 bulb
+    // and skip if it is.
+    //
+    // http://erleuchtet.org/2010/07/ridiculously-large-buddhabrot.html
+    // http://en.wikipedia.org/wiki/Mandelbrot_set#Optimizations
+
+    // this makes a significant different with very large 'max_itr' values
+    // at 2000 it wasn't noticable
+    // at 200000 it was a factor of 5 speedup
+
+    // check if the point is within the cardoid
+    var xminusq = x - 1/4;
+    var ysquared = y * y;
+    var q = xminusq*xminusq + y*y;
+    if(q*(q + xminusq) < ysquared/4) {
+        return true;
+    }
+    // or the period-2 bulb
+    if((x+1)*(x+1) + ysquared < ysquared/4) {
+        return true;
+    }
+
+    return false;
+}
 
 Buddha.prototype.calculate = function() {
 
@@ -113,36 +151,11 @@ Buddha.prototype.calculate = function() {
             // var x = Math.random() * 3 - 2; // -2 - 1
             // var y = Math.random() * 3 - 1.5; // -1.5 - 1.5
 
-            // points within the Mandelbrot set will iterate until max_itr.
-            // check if our point is within the cardoid or period-2 bulb
-            // and skip if it is.
-            //
-            // http://erleuchtet.org/2010/07/ridiculously-large-buddhabrot.html
-            // http://en.wikipedia.org/wiki/Mandelbrot_set#Optimizations
-
-            // this makes a significant different with very large 'max_itr' values
-            // at 2000 it wasn't noticable
-            // at 200000 it was a factor of 5 speedup
-
-            // check if the point is within the cardoid
-            var xminusq = x - 1/4;
-            var ysquared = y * y;
-            var q = xminusq*xminusq + y*y;
-            if(q*(q + xminusq) < ysquared/4) {
-                continue;
-            }
-            // or the period-2 bulb
-            if((x+1)*(x+1) + ysquared < ysquared/4) {
+            if(this.isPointInSet(x, y)) {
                 continue;
             }
 
             var result = this.iterate(x,y);
-
-            // Calling iterate again seems to be way faster than returning an array.
-            // in the latter case, the code spends 50% of its time garbage collecting
-            // those arrays.
-
-            // it may be worth trying using one array in this as scratch space
 
             if(result) {
                 for(var i = 0; i<result; i++) {
@@ -156,18 +169,55 @@ Buddha.prototype.calculate = function() {
     console.log("worker done: " + this.workerNumber);
 };
 
+Buddha.prototype.findCurly = function() {
+
+    for(;;) {
+        // why -3 - +3?
+        var x = 6 * Math.random() - 3;
+        var y = 6 * Math.random() - 3;
+
+        // var x = Math.random() * 3 - 2; // -2 - 1
+        // var y = Math.random() * 3 - 1.5; // -1.5 - 1.5
+
+        if(this.isPointInSet(x, y)) {
+            continue;
+        }
+
+        var result = this.iterate(x, y);
+        if(result) {
+            console.log("found curly at " + result);
+            for(var i = 0; i<result; i++) {
+                this.pushPixel(this.XY[i*2], this.XY[i*2+1]);
+            }
+            self.postMessage({cmd: 'curlyDone', imageData: this.imageData, i: this.workerNumber});
+            return;
+        }
+    }
+
+}
+
 function eventListener(e) {
     var data = e.data;
+    var b;
 
     switch(data.cmd) {
         case 'start':
 
             console.log("worker start: ", data);
 
-            var b = new Buddha(data, self);
-            b.calculate();
+            var b = new Buddha(data);
+            // probably a good idea not to block in the event listener
+            setTimeout(function(){
+                b.calculate();
+            }, 0);
             break;
-
+        case 'findCurlies':
+            console.log("curlies start: ", data);
+            if(!b) {
+                b = new Buddha(data);
+            }
+            b.findCurly();
+            break;
         default:
             console.log("unknown message: ", data);
     }

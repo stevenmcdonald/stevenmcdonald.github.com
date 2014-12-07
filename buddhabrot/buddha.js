@@ -52,10 +52,13 @@
                 ]);
         },
         'bichrome': function(point) {
-            if(point > 223) {
-                var scale = point - 223;
-                return([scale, scale, scale, point]);
+
+            if(point % 2 === 0) {
+                return([point, 0, 0, 255]);
+            } else {
+                return([0, 0, point, 255]);
             }
+
             return([point, point, point, 255]);
         },
         'rainbowish':function(point){
@@ -91,7 +94,7 @@
             var scaled;
 
             if(point <= 95) {
-                return([0, 0, 0, 0]);
+                return([point, point, point, 255]);
             }
             if(point <= 127) {
                 scaled = 128 + point; // 224 - 255
@@ -176,15 +179,67 @@
 
             scaled = (point - 191) * 4 - 1;
             return([scaled, scaled, scaled, 255]);
+        },
+        'frosty': function(point) {
+            return([point, Math.max(0, point-127), Math.max(0, point-127), 255]);
+        },
+        'sporl': function(point, raw) {
+            var scaled;
+
+            if(raw > 0.75) {
+                scaled = Math.round(raw * 255);
+                return([scaled, scaled, scaled, 255]);
+            }
+            if(raw > 0.5) {
+                scaled = Math.round((raw + 0.25) * 255);
+                return([scaled, 0, 0, 255]);
+            }
+            if(raw > 0.25) {
+                scaled = Math.round((raw + 0.5) * 255);
+                return([0, 0, scaled, 255]);
+            }
+            scaled = Math.round((raw + 0.75) * 255);
+            return([0, scaled, 0, 255]);
+        },
+        '__user': function(point, raw) {
+            var color;
+
+            if(window.scmBuddha.userColorMap && typeof window.scmBuddha.userColorMap === 'function') {
+                color = window.scmBuddha.userColorMap(point, raw);
+                return color;
+            } else {
+                throw new Error('no userColorMap!');
+            }
         }
     };
     // var colormapper = 'monochrome';
     // var colormapper = 'experiment';
 
-    function mapColor(point, weight) {
-        var color = colormapers[colormapper](point, weight);
+    function mapColor(point, point8) {
+        var color = colormapers[colormapper](point8, point);
         // console.log("color: ", color);
         return color;
+    }
+
+    function curlyMapColor(point, point8) {
+        var r = Math.floor(Math.random() * 265),
+            g = Math.floor(Math.random() * 265),
+            b = Math.floor(Math.random() * 265);
+        if(point8) console.log("point8 " + point8);
+        return([r, g, b, point8]);
+        // return([r, g, b, 255]);
+    }
+
+    function scale(ramp) {
+        if(isNaN(ramp)) {
+            ramp = 0;
+        }
+        if(ramp < 0) { throw new Error('low ramp'); }
+        if(ramp > 1) { ramp = 1; }
+        ramp = Math.pow(ramp, 0.5);
+        var ramp8 = Math.round(ramp * 255);
+
+        return([ramp, ramp8]);
     }
 
     function draw(imageData) {
@@ -199,52 +254,81 @@
             console.log("time: " + t/1000 + ' seconds');
         }
 
-        function scale(ramp) {
-            if(isNaN(ramp)) {
-                if(biggest - smallest !== 0) { throw new Error('yes'); }
-                ramp = 0;
-            }
-            if(ramp < 0) { throw new Error('low ramp'); }
-            if(ramp > 1) { ramp = 1; }
-            ramp = Math.pow(ramp, 0.5);
-            ramp = Math.round(ramp * 255);
-
-            return ramp;
-        }
-
         // this list is too long for Math.max.apply, etc
         biggest = 0;
-        bigW = 0;
+        // bigW = 0;
         for(var bi = 0; bi < imageData.length; bi++) {
             biggest = Math.max(imageData[bi], biggest);
-            bigW = Math.max(weights[bi], bigW);
+            // bigW = Math.max(weights[bi], bigW);
         }
         smallest = 0;
-        smallW = 0;
+        // smallW = 0;
         for(var si = 0; si < imageData.length; si++) {
             smallest = Math.min(imageData[si], smallest);
-            smallW = Math.min(weights[si], smallW);
+            // smallW = Math.min(weights[si], smallW);
         }
 
-        console.log({smallW: smallW, bigW: bigW});
+        // console.log({smallW: smallW, bigW: bigW});
 
         for(var j = 0; j < (dimX * dimY); j++) {
 
             var ramp = 2*(imageData[j] - smallest) / (biggest - smallest);
+            var ramp8;
 
-            ramp = scale(ramp);
+            var temp = scale(ramp);
+            ramp = temp[0];
+            ramp8 = temp[1];
 
             // var w = (weights[j] - smallW) / (bigW - smallW);
             // if(isNaN(w)) { w = 0; }
             // w *= 10000;
 
-            var rgba = mapColor(ramp);
+            var rgba = mapColor(ramp, ramp8);
 
             var tempi = j * 4;
             canvasData[tempi] = rgba[0];     // r
             canvasData[tempi + 1] = rgba[1]; // g
             canvasData[tempi + 2] = rgba[2]; // b
             canvasData[tempi + 3] = rgba[3]; // a
+        }
+
+        ctx.putImageData(image, 0, 0);
+    }
+
+    function drawCurly(imageData) {
+
+        var smallest, biggest;
+
+        // this list is too long for Math.max.apply, etc
+        biggest = 0;
+        for(var bi = 0; bi < imageData.length; bi++) {
+            biggest = Math.max(imageData[bi], biggest);
+        }
+        smallest = 0;
+        for(var si = 0; si < imageData.length; si++) {
+            smallest = Math.min(imageData[si], smallest);
+        }
+
+        for(var j = 0; j < (dimX * dimY); j++) {
+
+            var ramp = 2*(imageData[j] - smallest) / (biggest - smallest);
+            var ramp8;
+
+            var temp = scale(ramp);
+            ramp = temp[0];
+            ramp8 = temp[1];
+
+            // var w = (weights[j] - smallW) / (bigW - smallW);
+            // if(isNaN(w)) { w = 0; }
+            // w *= 10000;
+
+            var rgba = curlyMapColor(ramp, ramp8);
+
+            var tempi = j * 4;
+            canvasData[tempi] = Math.round((canvasData[tempi] + rgba[0]) / 2);     // r
+            canvasData[tempi+1] = Math.round((canvasData[tempi+1] + rgba[1]) / 2); // g
+            canvasData[tempi+2] = Math.round((canvasData[tempi+2] + rgba[2]) / 2); // b
+            canvasData[tempi+3] = Math.round((canvasData[tempi+3] + rgba[3]) / 2); // a
         }
 
         ctx.putImageData(image, 0, 0);
@@ -283,6 +367,7 @@
                 break;
             case 'done':
                 if(window.scmBuddha.doneCallback) { window.scmBuddha.doneCallback(); }
+                stopBuddha();
                 progress.set(0);
                 // fall through and draw
             case 'progressDraw':
@@ -291,6 +376,11 @@
                     addWeights(data.weights);
                 }
                 draw(buddhaBrot);
+                break;
+            case 'curlyDone':
+                console.log("curly found");
+                if(window.scmBuddha.doneCallback) { window.scmBuddha.doneCallback(); }
+                drawCurly(buddhaBrot);
                 break;
             default:
                 console.log('unknown message ', data);
@@ -321,6 +411,30 @@
         }
     }
 
+    function startCurlieThreaded(threads) {
+        numBuddhas = threads;
+        start = new Date().getTime();
+        buddhas = new Array(threads);
+        progresses = new Float32Array(threads);
+
+        for(var b=0; b<threads; b++) {
+            buddhas[b] = new Worker('buddhaWorker.js');
+            buddhas[b].addEventListener('message', buddhaListener);
+            for(var c=0; c<plots; c++) {
+                buddhas[b].postMessage({
+                    cmd: 'findCurlies',
+                    x: dimX,
+                    y: dimY,
+                    min_itr: min_itr,
+                    max_itr: max_itr,
+                    plots: plots/threads,
+                    i: b
+                });
+            }
+            console.log('curlie buddha ' + b);
+        }
+    }
+
     function startBuddha(options) {
 
         console.log("buddha.js start: ", options);
@@ -340,7 +454,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         buddhaBrot = new Uint32Array(dimX*dimY);
-        weights = new Uint32Array(dimX*dimY);
+        // weights = new Uint32Array(dimX*dimY);
 
         image = ctx.createImageData(dimX, dimY);
         canvasData = image.data;
@@ -353,6 +467,34 @@
         progress.set(0);
 
         startMultiThreaded(threads);
+    }
+
+    function startCurlies(options) {
+        var threads = options.threads || 2;
+
+        dimX    = options.dimX || 1000;
+        dimY    = options.dimY || 1000;
+        min_itr = options.min_itr || 2000;
+        max_itr = options.max_itr || 20000;
+        plots   = options.plots || 10;
+
+        canvas = document.getElementById('cancan');
+        ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        buddhaBrot = new Uint32Array(dimX*dimY);
+
+        image = ctx.createImageData(dimX, dimY);
+        canvasData = image.data;
+
+        if(!progress) {
+            progress = new ProgressBar.Line('#progress-container', {
+                color: '#FCB03C'
+            });
+        }
+        progress.set(0);
+
+        startCurlieThreaded(threads);
     }
 
     function stopBuddha() {
@@ -372,6 +514,7 @@
     window.scmBuddha = {
         startBuddha: startBuddha,
         stopBuddha: stopBuddha,
+        startCurlies: startCurlies,
         redraw: redraw
     };
 

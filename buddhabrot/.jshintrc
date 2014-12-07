@@ -7,10 +7,12 @@
 		"console",
 		"Uint32Array",
 		"Float32Array",
+		"Float64Array",
 		"Worker",
 		"self",
 		"window",
 		"angular",
-		"$"
+		"$",
+		"ace"
 	]
 }

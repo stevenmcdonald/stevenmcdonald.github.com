@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2-bootstrap.min.css">
 
-    <style>
+    <style type="text/css">
 
         /* progress bar */
         .prog-container > svg {
@@ -25,9 +25,9 @@
             width: 1000px;
         }
 
-        /*.col-lg-1 {
+        .col-xs-1 {
             border: 1px solid red;
-        }*/
+        }
 
         #progress-container {
             height: 2px;
@@ -45,18 +45,31 @@
             width: 1000px;
         }
 
+        #editor {
+            /*position: absolute;*/
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            height: 300px;
+        }
+
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
     <script src="bower_components/progressbar.js/dist/progressbar.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.3/angular.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ace/1.1.3/ace.js"></script>
 
     <script src="buddha.js"></script>
     <script src="buddhaApp.js"></script>
 </head>
 <body ng-app="BuddhaApp">
     <div class="container" ng-controller="BuddhaController">
+        <div class="row">
+            <h1>Buddhabrot</h1>
+        </div>
 
         <div class="row">
             <div id="canvas-container">
@@ -71,85 +84,129 @@
             </div>
         </div>
         <div id="controls-row" class="row">
+
             <div id="controls" class="well">
+
                 <form role="form" class="form-horizontal">
+
                     <div class="form-group">
-                        <div class="col-lg-2">
-                            <span class="label label-default" ng-hide="running">idle</span>
-                            <span class="label label-success" ng-show="running">running</span>
+                        <div class="col-xs-5">
+                            <div class="form-group">
+                                <div class="col-xs-2">
+                                    <span class="label label-default" ng-hide="running">idle</span>
+                                    <span class="label label-success" ng-show="running">running</span>
+                                </div>
+                                <div class="col-xs-2">
+                                    <a href="#" id="save-image" class="btn btn-success">Save Image</a>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="preset-select2" class="col-xs-4">Presets:</label>
+                                <div class="col-xs-5">
+                                    <select id="preset-select2" class="form-control">
+                                        <option></option>
+                                        <option value="quick">Quick</option>
+                                        <option value="deep">Deep</option>
+                                        <option value="deeper">Deeper</option>
+                                        <option value="slow">Slow</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="plots" class="col-xs-4">Number of plots (in millions):</label>
+                                <div class="col-xs-4">
+                                    <input id="plots" type="number" class="form-control" ng-model="plots">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="min-itr" class="col-xs-4">Minumum Iterations:</label>
+                                <div class="col-xs-4">
+                                    <input id="min-itr" type="number" class="form-control" ng-model="min_itr">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="max-itr" class="col-xs-4">Maximum Iterations:</label>
+                                <div class="col-xs-4">
+                                    <input id="max-itr" type="number" class="form-control" ng-model="max_itr">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="color-map" class="col-xs-4">Color Map:</label>
+                                <div class="col-xs-5">
+                                    <select id="color-map" class="form-control">
+                                        <option value="frosty">Frosty Red</option>
+                                        <option value="monochrome">Greyscale</option>
+                                        <option value="flame">Flame</option>
+                                        <option value="experiment">Experiment</option>
+                                        <option value="rainbowish">Rainbowish</option>
+                                        <option value="snow">Snow</option>
+                                        <option value="bichrome">Bichrome</option>
+                                        <option value="crazy">Crazy</option>
+                                        <option value="cymrgb">Turkish Mosaic</option>
+                                        <option value="sporl">Sporl</option>
+                                        <option value="__user">Custom</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-xs-8">
+                                    <button type="submit" id="start-button" ng-click="start()" class="btn btn-primary" ng-disabled="running">Start</button>
+                                    <button type="button" id="stop-button" ng-click="stop()" class="btn btn-default" ng-disabled="!running">Stop</button>
+                                    <button type="button" id="find-curlies" ng-click="findCurlies()" class="btn btn-default-alt" ng-disabled="running" ng-hide="true">Curlies</button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="preset-select2" class="col-sm-2">Presets:</label>
-                        <div class="col-xs-3">
-                            <select id="preset-select2" class="form-control">
-                                <option></option>
-                                <option value="quick">Quick</option>
-                                <option value="deep">Deep</option>
-                                <option value="deeper">Deeper</option>
-                                <option value="slow">Slow</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="plots" class="col-sm-2">Number of plots (in millions):</label>
-                        <div class="col-xs-2">
-                            <input id="plots" type="number" class="form-control" ng-model="plots">
-                        </div>
-                        <!-- <div class="col-lg-4">
-                            <input class="form-control" ng-model="plots" type="range" min="1" max="10000" step="1">
-                        </div>
-                        <div class="col-lg-2">
-                            <input id="plots-display" ng-model="plots" class="form-control text-right" type="text">
-                        </div> -->
-                    </div>
-                    <div class="form-group">
-                        <label for="min-itr" class="col-sm-2">Minumum Iterations:</label>
-                        <div class="col-xs-2">
-                            <input id="min-itr" type="number" class="form-control" ng-model="min_itr">
-                        </div>
-                        <!-- <div class="col-lg-4">
-                            <input class="form-control" ng-model="min_itr" type="range" min="0" max="20000" step="1">
-                        </div>
-                        <div class="col-lg-2">
-                            <input id="min-itr-display" ng-model="min_itr" class="form-control text-right" type="text">
-                        </div> -->
-                    </div>
-                    <div class="form-group">
-                        <label for="max-itr" class="col-lg-2 col-sm-2">Maximum Iterations:</label>
-                        <div class="col-xs-2">
-                            <input id="max-itr" type="number" class="form-control" ng-model="max_itr">
-                        </div>
-                        <!-- <div class="col-lg-4">
-                            <input class="form-control" ng-model="max_itr" type="range" min="0" max="20000" step="1">
-                        </div>
-                        <div class="col-lg-2">
-                            <input id="max-itr-display" ng-model="max_itr" class="form-control text-right" type="text">
-                        </div> -->
-                    </div>
-                    <div class="form-group">
-                        <label for="color-map" class="col-sm-2">Color Map:</label>
-                        <div class="col-xs-2">
-                            <select name="color-map"
-                                    id="color-map"
-                                    class="form-control"
-                                    ng-model="colormap"
-                                    ng-disabled="running">
-                                <option value="monochrome">Greyscale</option>
-                                <option value="flame">Flame</option>
-                                <option value="experiment">Experiment</option>
-                                <option value="rainbowish">Rainbowish</option>
-                                <option value="snow">Snow</option>
-                                <option value="bichrome">Bichrome</option>
-                                <option value="crazy">Crazy</option>
-                                <option value="cymrgb">CYMRGB</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="col-xs-4">
-                            <button type="submit" id="start-button" ng-click="start()" class="btn btn-primary" ng-disabled="running">Start</button>
-                            <button type="button" id="stop-button" ng-click="stop()" class="btn btn-default" ng-disabled="!running">Stop</button>
+                        <div class="col-xs-7" ng-show='showCustomEditor'>
+                            <div class="form-group">
+                                <div id="editor">
+// point and raw represent the same data, more or less.
+// point is an integer, scaled 0-255,
+// and raw is the floating point value 0-1
+//
+// you should return an Array of 4 integers, 0-255, [r, g, b, a]
+
+(function() {return function(point, raw) {
+    // return([point, 0, 255-point, 255]);
+    var scaled;
+
+        if(point &lt;= 31) {
+            // 127 - 255
+            scaled = (point + 33) * 4 - 1;
+            return([scaled, scaled, scaled, 255]);
+        }
+        if(point &lt;= 63) {
+            scaled = (point + 1) * 4 - 1;
+            return([0, scaled, scaled, 255]);
+        }
+        if(point &lt;= 95) {
+            scaled = (point - 31) * 4 - 1;
+            return([scaled, scaled, 0, 255]);
+        }
+        if(point &lt;= 127) {
+            scaled = (point - 63) * 4 - 1;
+            return([scaled, 0, scaled, 255]);
+        }
+        if(point &lt;= 159) {
+            scaled = (point - 95) * 4 - 1;
+            return([scaled, 0, 0, 255]);
+        }
+        if(point &lt;= 191) {
+            scaled = (point - 127) * 4 - 1;
+            return([0, scaled, 0, 255]);
+        }
+        if(point &lt;= 223) {
+            scaled = (point - 159) * 4 - 1;
+            return([0, scaled, 0, 255]);
+        }
+        scaled = (point - 191) * 4 - 1;
+        return([scaled, scaled, scaled, 255]);
+}})();
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="btn btn-warning" ng-click="redrawUserColorMap()">Apply</button>
+                            </div>
                         </div>
                     </div>
                 </form>
